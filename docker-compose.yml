@@ -6,6 +6,8 @@ services:
     container_name: dalton_controller
     environment:
       - CONTROLLER_DEBUG=${CONTROLLER_DEBUG}
+      - http_proxy=${http_proxy}
+      - https_proxy=${https_proxy}
     volumes:
       - ./app:/opt/dalton/app
 #      - ./run.py:/opt/dalton/run.py
