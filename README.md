@@ -1,3 +1,3 @@
 # daltondocker
-# # How to use # #
+## How to use ##
 Enter daltondocker folder and Run `docker-compose up`
