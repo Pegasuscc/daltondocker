@@ -1,0 +1,326 @@
+{% extends "dalton/layout.html" %}
+{% block js %}
+    $(window).unload(function(){
+        $('#uploadDialog').modal('hide');
+    });
+
+    function updateHeading(version) {
+        var newstr = ''
+        if (version == undefined) {
+            version = $('input[name="sensor_tech"]:checked').val();
+        }
+        version = version.charAt(0).toUpperCase() + version.slice(1);
+        mysplit = version.split('-');
+        if (mysplit.length > 1) {
+             newstr = mysplit[0] + ' ' + mysplit.slice(1,).join('-');
+        } else {
+            newstr = version;
+        }
+        document.getElementById("versionHeading").innerHTML = newstr
+    }
+
+	$(document).ready(function() {
+		$('#prod_ruleset').show();
+		if ($('#optionRuleset').prop('checked')) {
+			$('#prod_ruleset').show();
+			$('#labelEnableAllRules').show();
+			$('#labelShowFlowbitAlerts').show();
+		} else {
+			$('#prod_ruleset').hide();
+			$('#labelEnableAllRules').hide();
+			$('#labelShowFlowbitAlerts').hide();
+		}
+		if ($('#optionRulesetCustom').prop('checked')) {
+			$('#custom_ruleset').show();
+		} else {
+			$('#custom_ruleset').hide();
+		}
+		if ($('#optionCustomVars').prop('checked')) {
+			$('#custom_vars').show();
+            $('#showHideOptionCustomVars').find('i').removeClass('icon-chevron-right').addClass('icon-chevron-down');
+		} else {
+			$('#custom_vars').hide();
+            $('#showHideOptionCustomVars').find('i').removeClass('icon-chevron-down').addClass('icon-chevron-right');
+		}
+		if ($('#optionCustomEngineConf').prop('checked')) {
+			$('#custom_engineconf').show();
+            $('#showHideOptionCustomEngineConf').find('i').removeClass('icon-chevron-right').addClass('icon-chevron-down');
+		} else {
+			$('#custom_engineconf').hide();
+            $('#showHideOptionCustomEngineConf').find('i').removeClass('icon-chevron-down').addClass('icon-chevron-right');
+		}
+
+		for(i=1; i < {{max_pcaps}}; i++) {
+			if ($('#coverage-pcap'+i).val()) {
+				$('#pcap'+i).show();
+				if (i == {{max_pcaps}} -1) {
+					$('#addpcap').hide();
+				}
+			}
+		}		
+        if ({{max_pcaps}} == 1) {
+		    $('#addpcap').hide();
+        }
+
+		$('#submitjob').submit( function() {
+			$('#uploadDialog').modal()
+		});
+
+		$('#optionRuleset').click( function() {
+			if ($('#optionRuleset').prop('checked')) {
+				$('#prod_ruleset').show();
+				$('#labelEnableAllRules').show();
+				$('#labelShowFlowbitAlerts').show();
+			} else {
+				$('#prod_ruleset').hide();
+				$('#labelEnableAllRules').hide();
+				$('#labelShowFlowbitAlerts').hide();
+			}
+		});
+
+		$('#optionRulesetCustom').click( function() {
+			if ($('#optionRulesetCustom').prop('checked')) {
+				$('#custom_ruleset').show();
+			} else {
+				$('#custom_ruleset').hide();
+			}
+		});
+
+		$('#showHideOptionCustomVars').click( function() {
+            $(this).find('i').toggleClass('icon-chevron-right').toggleClass('icon-chevron-down');
+		    $('#custom_vars').toggle();
+            if ($('#custom_vars').is(':visible')) {
+                $('#optionCustomVars').prop('checked', true);
+            } else {
+                $('#optionCustomVars').prop('checked', false);
+            }
+   		});
+
+		$('#showHideOptionCustomEngineConf').click( function() {
+            $(this).find('i').toggleClass('icon-chevron-right').toggleClass('icon-chevron-down');
+		    $('#custom_engineconf').toggle();
+            if ($('#custom_engineconf').is(':visible')) {
+                $('#optionCustomEngineConf').prop('checked', true);
+            } else {
+                $('#optionCustomEngineConf').prop('checked', false);
+            }
+		});
+
+		$('#addpcap').click( function() {
+			for(i=1; i < {{max_pcaps}}; i++) {
+				if ($('#pcap'+i).is(':hidden')) {
+					$('#pcap'+i).show();
+					if (i == {{max_pcaps}} - 1) {
+						$('#addpcap').hide();
+					}
+					break;
+				}
+			}
+		});
+
+		$('#resetpcap').click( function() {
+			<!-- reset file input fields before making them hidden (important!) -->
+			for(i=0; i < {{max_pcaps}}; i++) {
+				reset_file_input($('#coverage-pcap'+i));
+				if (i > 0) {
+					$('#pcap'+i).hide();
+				}
+			}
+            if ({{max_pcaps}} > 1) {
+			    $('#addpcap').show();
+            }
+		});
+
+		function reset_file_input(id) {
+			<!--	id.replaceWith(id=id.clone(false).val("")); -->
+			id.wrap('<form>').closest('form').get(0).reset();
+			id.unwrap();
+		}
+
+        <!-- called when sensor version changed.  Updates engine.conf data AND variables -->
+        $('input[name="sensor_tech"]').change( function() {
+            var version = $(this).attr("id")
+            var new_engine_conf = $.get("/dalton/controller_api/request_engine_conf/" + version, function( data ) {
+                if (data && data != '') {
+                    confs = JSON.parse(data)
+                    document.getElementById('custom_engineconf_t').value = confs.conf;
+                    document.getElementById('custom_vars_t').value = confs.variables;
+                    updateHeading(version);
+                }
+            });
+        });
+        updateHeading();
+    });
+{% endblock %}
+
+{% block body %}
+	{% if error != None %}
+		<div class="alert alert-error">
+			<b>An error occured:&nbsp;</b>{{error}}
+		</div>
+	{% endif %}
+	<div class="row-fluid">
+		<div class="span11">
+			<form id='submitjob' action="/dalton/coverage/summary" method="post" enctype="multipart/form-data">
+				<h2>
+				Submit A New Job for <b id="versionHeading">
+                {% if sensors != None and sensors != '' and sensors|length > 0 %}
+                    {% set sensor = sensors[0].split('-') %}
+                    {% if sensor|length > 1 %}
+                        {{sensor[0]|title}} {{sensor[1:]|join('-')}}
+                    {% else %}
+                        {{sensor|title}}
+                    {% endif %}
+                {% else %}
+                    {{sensor_tech|title}}
+                {% endif %}
+                </b>
+				</h2>
+				<p>Test pcaps on an IDS sensor against defined and/or ad-hoc rulesets.</p>
+				<div class="tabbable tabs-left">
+					<ul class="nav nav-tabs">
+						<li class='active'><a href="#jobdetails" data-toggle='tab'>Job Settings</a></li>
+						<li><a href="#sensorconf" data-toggle='tab'>Config Files</a></li>
+					</ul>
+					<div class="tab-content">
+						<div class="tab-pane active" id="jobdetails">
+							<div style="display:block;width:100%;padding:0;margin-bottom:5px;font-size:21px;line-height:40px;color:#333;border:0;">Packet Captures</div>
+                            <p>Please specify a packet capture (libpcap). Depending on the engine, pcapng format may be supported as well.</p>
+                            {% if fspcap %}
+                                <input type="text" name="fspcap" id="fspcap" readonly="readonly" value={{fspcap}}><p/>
+                            {% endif %}
+                            {% for n in range(max_pcaps|int) %}
+                                {% if n != 0 %}
+                                    <div id="pcap{{n}}" style="display:none;">
+                                {% endif %}
+                                    <input type="file" name="coverage-pcap{{n}}" id="coverage-pcap{{n}}" placeholder='Select a PCAP'><p/>
+                                {% if n != 0 %}
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+	
+							<div id="addpcap" style="display:inline;">
+								<a href="#">Add another pcap</a>
+								&nbsp;|&nbsp;
+							</div>
+							<div id="resetpcap" style="display:inline;">
+								<a href="#">Reset Pcaps</a>
+							</div>
+
+
+							<div style="display:block;width:100%;padding:0;margin-bottom:5px;margin-top:25px;font-size:21px;line-height:40px;color:#333;border:0;border-top:1px solid #e5e5e5">Sensor Version</div>
+                                {% if sensors != None and sensors != '' and sensors|length > 0 %}
+                                    {% for sensor in sensors %}
+                                        <!-- TODO: make this a grid insead of a list -->
+                                        <input type="radio" name="sensor_tech" id="{{sensor}}" value="{{sensor}}"{% if loop.first %} checked{% endif %}><label for="{{sensor}}" class="radio inline">
+                                            {% set tlist = sensor.split('-') %}
+                                            {% if tlist|length > 1 %}
+                                                {{tlist[1:]|join('-')}}
+                                            {% else %}
+                                                {{sensor|title}}
+                                            {% endif %}
+                                        </label>
+                                        {% if not loop.last %}<br>{% endif %}
+                                    {% endfor %}
+                                {% else %}
+                                    <p style="color:red">No available Dalton Agents (Sensors) for 
+                                    {{ sensor_tech.split('-')[0]|title }} 
+                                    </p>
+                                {% endif %}
+							<div style="display:block;width:100%;padding:0;margin-bottom:5px;margin-top:25px;font-size:21px;line-height:40px;color:#333;border:0;border-top:1px solid #e5e5e5">Ruleset</div>
+							<label class="checkbox">
+								<input type="checkbox" name="optionProdRuleset" id="optionRuleset" value="prod" checked>
+								Use a defined ruleset
+							</label>
+							<span id="prod_ruleset">
+								<select name="prod_ruleset" style="width:auto;">
+									{% for ruleset in rulesets %}
+										<option value="{{ruleset[1]}}">{{ ruleset[0] }}</option>
+									{% endfor %}
+								</select>
+							</span>
+							<label class="checkbox" id="labelEnableAllRules">
+								<input type="checkbox" name="optionEnableAllRules" id="optionEnableAllRules" value="enableAll">
+								Enable disabled rules
+							</label>
+							<label class="checkbox" id="labelShowFlowbitAlerts">
+								<input type="checkbox" name="optionShowFlowbitAlerts" id="optionShowFlowbitAlerts" value="showFlowbitAlerts">
+								Show all flowbit alerts
+							</label>
+							<br>
+							<label class="checkbox">
+								<input type="checkbox" name="optionCustomRuleset" id="optionRulesetCustom" value="custom">
+								Use custom rules
+							</label>
+							<span id="custom_ruleset">
+								<textarea rows='10' cols='80' style='width: 1000px;' name="custom_ruleset" placeholder='alert tcp any any -> any any (msg:"";);'></textarea>
+							</span>
+							<div style="display:block;width:100%;padding:0;margin-bottom:5px;margin-top:25px;font-size:21px;line-height:40px;color:#333;border:0;border-top:1px solid #e5e5e5">Logs</div>
+							<label class="checkbox">
+								<input type="checkbox" name="optionAlertDetailed" id="optionAlertDetailed" value="optionAlertDetailed" checked>
+							    Pcap records from alerts
+                            </label>
+                            {% if sensor_tech.startswith('suri') %}
+                                <label class="checkbox">
+                                    <input type="checkbox" name="optionOtherLogs" id="optionOtherLogs" value="optionOtherLogs" checked>
+                                    Other logs (Alert Debug, HTTP, TLS, DNS, etc.)
+                                </label>
+                            {% endif %}
+							<label class="checkbox">
+								<input type="checkbox" name="optionPerf" id="optionPerf" value="perf">
+								Rule profiling
+							</label>
+                            {% if sensor_tech.startswith('suri') %}
+                                <label class="checkbox">
+                                    <input type="checkbox" name="optionFastPattern" id="optionFastPattern" value="optionFastPattern">
+                                    Fast pattern info
+                                </label>
+                            {% endif %}
+						</div>
+						<div class="tab-pane" id="sensorconf">
+							<div style="display:block;width:100%;padding:0;margin-bottom:5px;font-size:21px;line-height:40px;color:#333;border:0;">Variables</div>
+                                <input type="checkbox" name="optionCustomVars" id="optionCustomVars" value="custom" style="display:none;">
+								Modify default variables{% if sensor_tech.startswith('suri') %}.  This is a YAML file, whitespace is important.{% endif %}
+                                <br><a id="showHideOptionCustomVars" href="javascript:void(0)" class="btn btn-default"><i class="glyphicon icon-chevron-right"></i></a>
+                                <p>
+							<span id="custom_vars" class="span11";>
+								<textarea rows='25' cols='50' style='width: 100%;' name="custom_vars" id="custom_vars_t">{{ variables }}</textarea>
+							</span>
+                            <p>
+							<label class="checkbox inline">
+                                <input type="checkbox" name="overrideExternalNet" id="overrideExternalNet" value="eoverride" checked>
+								Override EXTERNAL_NET (set to 'any')
+							</label>
+                            <div style="display:block;width:100%;padding:0;margin-bottom:5px;margin-top:25px;font-size:21px;line-height:40px;color:#333;border:0;border-top:1px solid #e5e5e5">Configuration File</div>
+                                <input type="checkbox" name="optionCustomEngineConf" id="optionCustomEngineConf" value="custom" style="display:none;">
+                                Modify {{ sensor_tech.split('-')[0]|title }} configuration{% if sensor_tech.startswith('suri') %}.  This is a YAML file, whitespace is important.{% endif %}
+                                <br><a id="showHideOptionCustomEngineConf" href="javascript:void(0)" class="btn btn-default"><i class="glyphicon icon-chevron-right"></i></a>
+                                <p>
+                            <span id="custom_engineconf" class="span11">
+                                <textarea rows='25' cols='50' style='width: 100%;' name="custom_engineconf" id="custom_engineconf_t">{{ engine_conf }}</textarea>
+                            </span>
+
+	
+						</div>
+
+					</div>
+				</div>
+
+				<div id="uploadDialog" class="modal hide">
+					<div class="modal-header">Uploading pcap(s), please wait...</div>
+					<div class ="modal-body">
+						<div class="progress progress-striped active">
+							<div class="bar" style="width: 100%;"></div>
+						</div>
+					</div>
+				</div>
+         
+				<div class="form-actions">
+					<button type="submit" class="btn btn-primary">Submit</button>
+					<button type="button" class="btn">Cancel</button>
+				</div>
+
+			</form>
+		</div>
+	</div><!--/row-->
+{% endblock %}

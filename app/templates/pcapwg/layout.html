@@ -1,0 +1,73 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Flowsynth</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link href="{{ url_for('static', filename='bootstrap/css/bootstrap.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/pcapgen.css') }}" rel="stylesheet">
+    <script src="{{ url_for('static', filename='bootstrap/js/jquery.js')}}"></script>
+    <script src="{{ url_for('static', filename='bootstrap/js/bootstrap.js')}}"></script>
+
+    <style>
+      body {
+        padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
+      }
+    </style>
+    <link href="{{ url_for('static', filename='bootstrap/css/bootstrap-responsive.css') }}" rel="stylesheet">
+
+  </head>
+
+  <body>
+
+    <div class="navbar navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container span12">
+          <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </a>
+          <a class="brand" href="#">Flowsynth WebUI</a>
+          <div class="nav-collapse collapse">
+            <ul class="nav">
+                {%  if page == 'build': %}
+                    <li class="active"><a href="#">Build</a></li>
+                {%  else: %}
+                    <li><a href="/flowsynth/">Build</a></li>
+                {%  endif %}
+                {%  if page == 'compile': %}
+                    <li class="active"><a href="#">Compile</a></li>
+                {%  else: %}
+                    <li><a href="/flowsynth/compile">Compile</a></li>
+                {%  endif %}
+                {%  if page == 'about': %}
+                    <li class="active"><a href="#">About</a></li>
+                {%  else: %}
+                    <li><a href="/flowsynth/about">About</a></li>
+                {%  endif %}
+                <li><a href="/">Dalton</a></li>
+            </ul>
+          </div><!--/.nav-collapse -->
+        </div>
+      </div>
+    </div>
+
+    <div class="container-fluid">
+        <div class="row-fluid">
+            <div class="span1 navbar-fixed-top" style="margin-top:70px;">
+                <img src="{{ url_for('static', filename='images/flowsynth.png') }}" style="margin: 20px 50px">
+            </div>
+            <div class="span10 offset1">
+                {% block body %}{% endblock %}
+            </div>
+        </div>
+    </div> <!-- /container -->
+
+    <script type="text/javascript">
+    {% block js %}{% endblock %}
+    </script>
+  </body>
+</html>

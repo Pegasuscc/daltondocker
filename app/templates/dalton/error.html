@@ -1,0 +1,17 @@
+{% extends "dalton/layout.html" %}
+{% block body %}
+    <div class="row">
+        <div class="alert alert-error">
+            <h2><span>Error!</span></h2>
+        </div>
+        <p/>
+        <div class="span9">
+	    {% if jid != '' %}
+		    <h3>No data for job {{ jid }}</h3>
+	    {% endif %}
+        {% for line in msg %}
+            <p>{{line}}</p>
+        {% endfor %}
+        </div>
+    </div>
+{% endblock %}

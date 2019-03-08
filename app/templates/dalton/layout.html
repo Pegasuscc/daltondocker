@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Dalton</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link href="{{ url_for('static', filename='bootstrap/css/bootstrap.css') }}" rel="stylesheet" type="text/css">
+    <link href="{{ url_for('static', filename='css/dalton.css') }}" rel="stylesheet" type="text/css">
+    <script src="{{ url_for('static', filename='bootstrap/js/jquery.js') }}"></script>
+    <script src="{{ url_for('static', filename='bootstrap/js/bootstrap.js') }}"></script>
+    <style>
+      body {
+        padding-top: 60px;
+      }
+    </style>
+    <link href="{{ url_for('static', filename='bootstrap/css/bootstrap-responsive.css') }}" rel="stylesheet">
+  </head>
+
+  <body>
+  <div class="navbar navbar-fixed-top">
+    <div class="navbar-inner">
+      <div class="container span12">
+   
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </a>
+   
+        <a class="brand" href="#">Dalton</a>
+              <ul class="nav">
+                <li class="divider-vertical"></li>
+                {% if (request.url_rule|string).endswith("/dalton/") %}
+                    <li class="active"><a href="/dalton/"><i class="icon-home"></i>Home&nbsp;</a></li>
+                {% else %}
+                    <li><a href="/dalton/"><i class="icon-home"></i>Home&nbsp;</a></li>
+                {% endif %}
+                <li class="dropdown">
+                  <a href="#" class='dropdown-toggle' data-toggle='dropdown'>
+                    <i class="icon-plus"></i>&nbsp;New&nbsp;
+                    <b class="caret"></b>
+                  </a>
+                  <ul class="dropdown-menu">
+                    <li><a href="/dalton/coverage/suricata/">Suricata Test</a></li>
+                    <li><a href="/dalton/coverage/snort/">Snort Test</a></li>
+                  </ul>
+                </li>
+                {% if (request.url_rule|string).endswith("/queue") %}
+                    <li class="active"><a href="/dalton/queue" id='jobs-toggle'><i class="icon-list"></i>Queue&nbsp;</a></li>
+                {% else %}
+                    <li><a href="/dalton/queue" id='jobs-toggle'><i class="icon-list"></i>Queue&nbsp;</a></li>
+                {% endif %}
+                {% if (request.url_rule|string).endswith("/sensor") %}
+                    <li class="active"><a href="/dalton/sensor" id='sensor-toggle'><i class="icon-hdd"></i>Sensors&nbsp;</a></li>
+                {% else %}
+                    <li><a href="/dalton/sensor" id='sensor-toggle'><i class="icon-hdd"></i>Sensors&nbsp;</a></li>
+                {% endif %}
+                <li><a href="/flowsynth/" id='flowsynth-toggle'><i class="icon-wrench"></i>Flowsynth</a></li>
+                {% if (request.url_rule|string).endswith("/about") %}
+                    <li class="active"><a href="/dalton/about" id="about-toggle"><i class="icon-info-sign"></i>About</a></li>
+                {% else %}
+                    <li><a href="/dalton/about" id="about-toggle"><i class="icon-info-sign"></i>About</a></li>
+                {% endif %}
+                </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+    <div class="container-fluid">
+        <div class="row-fluid">
+            <div class="span1 navbar-fixed-top" style="margin-top:70px;">
+                <img src="{{ url_for('static', filename='images/dalton.png') }}" style="margin: 20px 20px">
+            </div>
+            <div class="span10 offset1">
+                {% block body %}{% endblock %}
+            </div>
+        </div> 
+    </div> <!-- /container -->
+
+    <script type="text/javascript">
+    {% block js %}{% endblock %}
+    </script>
+  </body>
+</html>
