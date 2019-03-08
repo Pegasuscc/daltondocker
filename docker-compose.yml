@@ -1,0 +1,82 @@
+version: '1'
+
+services:
+  controller:
+    image: pegasus233/dalton:dalton-controller
+    container_name: dalton_controller
+    environment:
+      - CONTROLLER_DEBUG=${CONTROLLER_DEBUG}
+    volumes:
+      - ./app:/opt/dalton/app
+#      - ./run.py:/opt/dalton/run.py
+      - ./rulesets:/opt/dalton/rulesets
+      - ./engine-configs:/opt/dalton/engine-configs
+    restart: always
+
+  nginx:
+    image: pegasus233/dalton:dalton-nginx
+    container_name: dalton_web
+    # to listen on a different port, edit the '.env' file
+    ports:
+      - "${DALTON_EXTERNAL_PORT}:80"
+    restart: always
+
+  redis:
+    image: pegasus233/dalton:dalton-redis-3.2.10
+    container_name: dalton_redis
+    restart: always
+
+
+###########################
+###### Dalton Agents ######
+###########################
+# To add a new, different, or another Agent for a
+# particular Suricata or Snort version, just copy
+# one of the existing specifications and change the
+# version number(s) as necessary.  For Suricata this
+# is the "SURI_VERSION" arg value; for Snort this is
+# the "SNORT_VERSION" arg value (and possibly DAQ_VERSION).
+# The service and container name will also need to be
+# changed to be unique.
+
+###########################
+##### Suricata Agents #####
+###########################
+
+# Suricata 4.1.0 from source
+  agent-suricata-4.1.0:
+    image: pegasus233/dalton:dalton-suricata-4.1.0
+    container_name: suricata-4.1.0
+    environment:
+      - AGENT_DEBUG=${AGENT_DEBUG}
+    restart: always
+
+# Suricata 3.2.3 from source
+  agent-suricata-3.2.3:
+    image: pegasus233/dalton:dalton-suricata-3.2.3
+    container_name: suricata-3.2.3
+    environment:
+      - AGENT_DEBUG=${AGENT_DEBUG}
+    restart: always
+
+
+
+###########################
+###### Snort Agents #######
+###########################
+#
+# Note: Attempting to build Snort 2.9.0 and 2.9.0.x
+#  will fail because Autoconf can't find the dnet files.
+#  This was apparently fixed in Snort > 2.9.1 so if
+#  you really want a Snort 2.9.0 or 2.9.0.x, feel free
+#  to build it yourself.  The Dalton Agent should work
+#  fine on it.
+#
+
+# Snort 2.9.12 from source
+#  agent-snort-2.9.12:
+#    image: pegasus233/dalton:dalton-snort-2.9.12
+#    container_name: snort-2.9.12
+#    environment:
+#      - AGENT_DEBUG=${AGENT_DEBUG}
+#    restart: always
