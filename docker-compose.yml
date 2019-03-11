@@ -24,7 +24,7 @@ services:
     restart: always
 
   redis:
-    image: pegasus233/dalton:dalton-redis-3.2.10
+    image: redis:3.2.10
     container_name: dalton_redis
     restart: always
 
